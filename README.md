@@ -51,6 +51,12 @@ Items present in every call identify that constant, so subtracting it makes the 
 `Ranking.anchor_spread` reports how well that story holds per chunk; if the individual anchors
 disagree about the offset, the equating is unsound and the number says so.
 
+**Which to use:** `two_stage` and `anchored` are statistically tied (0.7663 vs 0.7606, both
+indistinguishable from `flat`), so pick on cost, not quality. `rank()` defaults to `anchored`
+because it used **23% fewer calls** and needs no second sequential round-trip, which is what you
+feel inside an agent loop. If you would rather have the simpler thing to reason about, pass
+`strategy="two_stage"`. Do not use `naive`; it is in the library so the benchmark can measure it.
+
 ## Use it
 
 ```python
