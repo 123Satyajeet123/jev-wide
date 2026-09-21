@@ -1,0 +1,80 @@
+{
+  "model": "jev-1.13.0",
+  "n_queries": 3,
+  "per_chunk": 50,
+  "n_candidates": 200,
+  "passage_chars": 600,
+  "first_stage_recall": 0.6666666666666666,
+  "summary": {
+    "bm25": {
+      "ndcg@10": 0.6666666666666666
+    },
+    "flat": {
+      "ndcg@10": 0.6666666666666666,
+      "calls": 3,
+      "input_tokens": 88037,
+      "cost_usd": 0.0036975540000000005,
+      "floored": 0.9466666666666667,
+      "anchor_spread": null,
+      "failed_queries": 0,
+      "seconds": 9.645516872406006
+    },
+    "naive": {
+      "ndcg@10": 0.6666666666666666,
+      "calls": 12,
+      "input_tokens": 90488,
+      "cost_usd": 0.003800496,
+      "floored": 0.525,
+      "anchor_spread": null,
+      "failed_queries": 0,
+      "seconds": 10.284749031066895
+    },
+    "two_stage": {
+      "ndcg@10": 0.6666666666666666,
+      "calls": 15,
+      "input_tokens": 108704,
+      "cost_usd": 0.004565568,
+      "floored": 0.5316666666666666,
+      "anchor_spread": null,
+      "failed_queries": 0,
+      "seconds": 22.030443906784058
+    },
+    "anchored": {
+      "ndcg@10": 0.6666666666666666,
+      "calls": 12,
+      "input_tokens": 101210,
+      "cost_usd": 0.00425082,
+      "floored": 0.8229166666666666,
+      "anchor_spread": 0.08634114708650535,
+      "failed_queries": 0,
+      "seconds": 17.644336938858032
+    }
+  },
+  "per_query_ndcg": {
+    "bm25": {
+      "1": 0.0,
+      "100": 1.0,
+      "1012": 1.0
+    },
+    "flat": {
+      "1": 0.0,
+      "100": 1.0,
+      "1012": 1.0
+    },
+    "naive": {
+      "1": 0.0,
+      "100": 1.0,
+      "1012": 1.0
+    },
+    "two_stage": {
+      "1": 0.0,
+      "100": 1.0,
+      "1012": 1.0
+    },
+    "anchored": {
+      "1": 0.0,
+      "100": 1.0,
+      "1012": 1.0
+    }
+  }
+}
