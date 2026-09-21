@@ -229,8 +229,7 @@ def two_stage(state: str, instructions: str, items: dict[str, str], per_chunk: i
 
 
 def anchored(state: str, instructions: str, items: dict[str, str], per_chunk: int = 50,
-             anchors: int = 8, anchor_skip: int = 20, model: str = MODEL,
-             workers: int = 8, **_) -> Ranking:
+             anchors: int = 8, model: str = MODEL, workers: int = 8, **_) -> Ranking:
     """Put the same few candidates in every chunk and use them to equate the chunks.
 
     If Jev is a conditional logit (McFadden 1974), one call's log-probabilities are the
@@ -247,14 +246,18 @@ def anchored(state: str, instructions: str, items: dict[str, str], per_chunk: in
     keys = list(items)
     if len(keys) <= per_chunk:
         return flat(state, instructions, items, model)
-    # An anchor links the scales; it should not win them. Taken from the head of the input
-    # order, anchor #1 is your first stage's top candidate, and putting a likely winner in
-    # every chunk takes the mass in every chunk and floors everything else -- measured at
-    # 0.914 of the field against 0.687 for the same chunks without anchors. `anchor_skip`
-    # steps past the contenders; the anchors still span the rest of the range.
-    pool = keys[anchor_skip:] if len(keys) > anchor_skip + anchors else keys
-    step = max(1, len(pool) // anchors)
-    anchor_keys = pool[::step][:anchors]
+    # Anchors are spread from the head of the input order, which means the strongest
+    # candidates are among them. That looks wrong -- a strong anchor takes mass in every
+    # chunk and floors the rest of it (0.914 of the field, against 0.687 without anchors)
+    # -- and drawing them from rank 20+ instead was tried and is worse: nDCG@10 0.7212 vs
+    # 0.7606, with the per-anchor offsets disagreeing at 0.455 nats against 0.181.
+    #
+    # An anchor's one job is to identify its chunk's offset, and at two-decimal precision a
+    # weak anchor returns 0.00 in every chunk. Its logit is then the floor constant
+    # everywhere, it says nothing about the offset, and it only adds noise. Being measurable
+    # is the requirement; dominating is how a candidate becomes measurable here.
+    step = max(1, len(keys) // anchors)
+    anchor_keys = keys[::step][:anchors]
     rest = [k for k in keys if k not in set(anchor_keys)]
     chunks = [c + anchor_keys for c in pack({k: items[k] for k in rest}, per_chunk)]
     maps, tokens, calls = _run_chunks(state, instructions, items, chunks, model, workers)

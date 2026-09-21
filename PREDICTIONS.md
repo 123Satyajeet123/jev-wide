@@ -47,6 +47,6 @@ same thing: an anchor set should be representative of the scale's range, not of 
 
 | # | prediction | outcome |
 |---|---|---|
-| **P6** | Drawing anchors from first-stage ranks 20+ instead of from rank 0 cuts the floored fraction from 0.914 to below 0.75, and improves `anchored` nDCG@10 by **≥ 0.005** over the rank-0 anchor set. | |
+| **P6** | Drawing anchors from first-stage ranks 20+ instead of from rank 0 cuts the floored fraction from 0.914 to below 0.75, and improves `anchored` nDCG@10 by **≥ 0.005** over the rank-0 anchor set. | ❌ **refuted, and backwards.** Floored did fall, 0.914 → 0.734. nDCG@10 went **0.7606 → 0.7212**, and the per-anchor offsets went from agreeing at 0.181 nats to disagreeing at 0.455. The reasoning was wrong: an anchor exists to identify its chunk's offset, and at two-decimal precision a weak anchor returns 0.00 in every chunk, so its logit is the floor constant everywhere and it carries no information about the offset at all. Being *measurable* is the requirement, and domination is how a candidate becomes measurable here. Default reverted; the knob deleted. `runs/scifact-20260921T124136` |
 
 Frozen 2026-09-21, after `runs/scifact-20260921T123132` and before the run that scores it.

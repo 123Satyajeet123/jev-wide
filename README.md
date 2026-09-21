@@ -73,7 +73,7 @@ ranking.calls, ranking.input_tokens
 python jev_wide.py     # self-check against a synthetic conditional logit. Free, no key needed.
 ```
 
-## Two things that will bite you
+## Three things that will bite you
 
 **Probabilities arrive at two decimal places.** At 200 candidates, **95.8%** of the field comes back
 at exactly `0.00` — so `log p` is undefined for most of it and the ranking below the top few is
@@ -132,7 +132,7 @@ shuffle *improves* on A rather than just perturbing it.
 
 ### Predictions, scored
 
-Frozen in `PREDICTIONS.md` before the first call. Four of six held; the wrong ones stay.
+Frozen in `PREDICTIONS.md` before the run that tested each. **Four of six held.** The two that died are the useful ones and they stay.
 
 | # | prediction | outcome |
 |---|---|---|
@@ -141,7 +141,29 @@ Frozen in `PREDICTIONS.md` before the first call. Four of six held; the wrong on
 | P3 | `anchored` within 0.02 of `two_stage` | ✅ **0.006**, at 23% fewer calls and one fewer sequential round-trip |
 | P4 | per-anchor offsets agree, SD < 0.5 nats | ✅ **0.181 nats** — Jev behaves like a conditional logit with a per-call offset |
 | P5 | chunking *beats* `flat`, because smaller chunks buy resolution | ❌ **refuted.** `two_stage` is +0.004 [−0.008, +0.017]. It ties `flat`; it does not beat it. Resolution was recovered (floored 0.958 → 0.687) and did not convert into nDCG@10 |
-| P6 | anchors drawn past the contenders cut floored <0.75 and gain ≥0.005 | *(pending)* |
+| P6 | anchors drawn past the contenders cut floored <0.75 and gain ≥0.005 | ❌ **refuted, and backwards** — floored fell to 0.734 as predicted, but nDCG@10 fell 0.7606 → 0.7212 and anchor spread rose 0.181 → 0.455 nats. See below |
+
+### What an anchor has to be, which is the opposite of what I assumed
+
+`anchored` puts the same few candidates in every chunk, and they are spread from the head of
+the first-stage order — so the strongest candidates are among them. That looks like a mistake:
+a strong anchor takes mass in every chunk and floors the rest of it (0.914 of the field, against
+0.687 for the same chunks with no anchors). So I predicted (P6) that drawing anchors from rank
+20+ would help, and measured it.
+
+| anchor set | nDCG@10 | floored | per-anchor offset SD |
+|---|---|---|---|
+| spread from rank 0 | **0.7606** | 0.914 | **0.181 nats** |
+| spread from rank 20+ | 0.7212 | 0.734 | 0.455 nats |
+
+**Worse, by −0.039.** The resolution argument was right and irrelevant; the equating argument was
+backwards. An anchor's only job is to identify its chunk's offset, and at two-decimal precision a
+weak anchor comes back at `0.00` in *every* chunk — its logit is the floor constant everywhere, it
+says nothing about the offset, and it contributes noise to the mean. **Being measurable is the
+requirement, and at this quantisation dominating is how a candidate becomes measurable.**
+
+The default is reverted and the knob is gone. An untested third possibility is left on the table:
+anchors taken as the top-k outright, rather than spread. If you test it, send the rows.
 
 ### Rows we could not collect, reported rather than filtered
 
